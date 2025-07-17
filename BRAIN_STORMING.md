@@ -211,16 +211,16 @@ Make the Morshed Have Department (Done)
 
 -Make the upload Screen !!!!!!! (done)
 -Make upload student finishedCourses (done)
+-Make the morshed upload Screen
+-Fix Register Screen
 
-Last But not least : 
 -make admin account that can:
  see all requests and edit all requests, 
  see all morsheds and edit all morsheds, 
  see all students and edit all students, 
  uploadStudents and uploadMorsheds
 
- And Remove Dummy Data file
-
+-Remove Dummy Data file
 
 
 Canceled (The Tree Replaced IT !!!)

@@ -1,0 +1,437 @@
+
+import 'package:flutter/material.dart';
+import 'package:tables/core/classes/course.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tables/core/constants/times.dart';
+
+
+class TableBuilderPage extends StatefulWidget {
+  const TableBuilderPage({super.key});
+
+  @override
+  State<TableBuilderPage> createState() => _TableBuilderPageState();
+}
+
+class _TableBuilderPageState extends State<TableBuilderPage> {
+  List<Course> courses = List.generate(8, (_) => Course());
+  bool isRamadanTiming = false;
+  bool firstTime = true;
+
+
+  @override
+  void initState() {
+    super.initState();
+    loadCourses();
+  }
+
+  void loadCourses() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? coursesJson = prefs.getString('courses');
+    if (coursesJson != null) {
+      List<dynamic> coursesList = jsonDecode(coursesJson);
+      setState(() {
+        courses = coursesList.map((course) => Course.fromJson(course)).toList();
+      });
+    }
+  }
+
+  void saveCourses() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String coursesJson = jsonEncode(courses.map((course) => course.toJson()).toList());
+    await prefs.setString('courses', coursesJson);
+  }
+
+  void addCourseField() {
+    setState(() {
+      courses.add(Course());
+      saveCourses();
+    });
+  }
+
+  void toggleRamadanTiming() {
+    setState(() {
+      isRamadanTiming = !isRamadanTiming;
+    });
+  }
+
+  int getTotalUnits() {
+    return courses.fold(0, (sum, course) => sum + course.units);
+  }
+
+Widget buildCourseField(int index) {
+
+  return Card(
+    elevation: 2,
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    floatingLabelBehavior:FloatingLabelBehavior.never ,
+                    labelText: courses[index].name.isEmpty ? 'اسم المادة' : courses[index].name,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      // Update the course name
+                      courses[index].name = value;
+                      if (courses[index].hasSection && courses[index].subCourse != null) {
+                        courses[index].subCourse!.name = 'سكشن $value';
+                      }
+                      saveCourses();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 80,
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText:  courses[index].startDuration == null ? 'البداية':"${courses[index].startDuration}",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {
+                      courses[index].startDuration = int.tryParse(value);
+                      saveCourses();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 80,
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: courses[index].endDuration == null ? 'النهاية':"${courses[index].endDuration}",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {
+                      courses[index].endDuration = int.tryParse(value);
+                      saveCourses();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 80,
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: courses[index].units == 0 ? 'الوحدات':"${courses[index].units}",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {
+                      courses[index].units = int.tryParse(value) ?? 0;
+                      saveCourses();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              DropdownButton<String>(
+                value: courses[index].day,
+                items: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء']
+                    .map((day) => DropdownMenuItem(value: day, child: Text(day)))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    courses[index].day = value!;
+                    saveCourses();
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Checkbox(
+                value: courses[index].hasSection,
+                onChanged: (value) {
+                  setState(() {
+                    courses[index].hasSection = value!;
+                    if (value && courses[index].subCourse == null) {
+                      courses[index].subCourse = Course(
+                        name: 'سكشن ${courses[index].name}',
+                        day: courses[index].day,
+                      );
+                    } else if (!value) {
+                      courses[index].subCourse = null;
+                    }
+                    saveCourses();
+                  });
+                },
+              ),
+              const Text('يحتوي على سكشن؟'),
+            ],
+          ),
+          if (courses[index].hasSection && courses[index].subCourse != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 20.0),
+              child: buildCourseFieldSub(courses[index].subCourse!, index),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+  
+
+  Widget buildCourseFieldSub(Course subCourse, int parentIndex) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: subCourse.name.isEmpty ?
+               'اسم المادة الفرعية' :
+               subCourse.name,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            controller: TextEditingController(text: subCourse.name)
+              ..selection = TextSelection.fromPosition(
+                TextPosition(offset: subCourse.name.length),
+              ),
+            onChanged: (value) {
+              setState(() {
+                subCourse.name = value;
+                saveCourses();
+              });
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 80,
+          child: TextField(
+            decoration: InputDecoration(
+              labelText:  subCourse.startDuration == null ? 'البداية':"${subCourse.startDuration}",
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              setState(() {
+                subCourse.startDuration = int.tryParse(value);
+                saveCourses();
+              });
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 80,
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: subCourse.endDuration == null ? 'نهاية':"${subCourse.endDuration}",
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              setState(() {
+                subCourse.endDuration = int.tryParse(value);
+                saveCourses();
+              });
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        DropdownButton<String>(
+          value: subCourse.day,
+          items: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء']
+              .map((day) => DropdownMenuItem(value: day, child: Text(day)))
+              .toList(),
+          onChanged: (value) {
+            setState(() {
+              subCourse.day = value!;
+              saveCourses();
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ],
+    );
+  }
+
+
+  Widget buildTable() {
+    const days = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء'];
+    List<List<List<String>>> table = List.generate(
+      5,
+      (_) => List.generate(8, (_) => []),
+    );
+
+    for (var course in courses) {
+      int start = course.startDuration ?? 1;
+      int end = course.endDuration ?? start;
+      int dayIndex = days.indexOf(course.day);
+      for (int i = start - 1; i < end && i < 8; i++) {
+        table[dayIndex][i].add(course.name);
+      }
+      if (course.hasSection && course.subCourse != null) {
+        int subStart = course.subCourse!.startDuration ?? start;
+        int subEnd = course.subCourse!.endDuration ?? subStart;
+        int subDayIndex = days.indexOf(course.subCourse!.day);
+        for (int i = subStart - 1; i < subEnd && i < 8; i++) {
+          table[subDayIndex][i].add(course.subCourse!.name);
+        }
+      }
+    }
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Table(
+        border: TableBorder.all(color: Colors.black, width: 1),
+        defaultColumnWidth: const FlexColumnWidth(),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(
+              color: Colors.teal[50],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            children: [
+              const Center(
+                child: Text(
+                  'اليوم',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...List.generate(
+                8,
+                (index) => Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          TableRow(
+            decoration: const BoxDecoration(color: Colors.white),
+            children: [
+              const Center(
+                child: Text(
+                  'الوقت',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...List.generate(
+                8,
+                (index) => Center(
+                  child: Text(
+                    isRamadanTiming ? ramadanTimings[index] : regularTimings[index],
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          for (int i = 0; i < 5; i++)
+            TableRow(
+              decoration: BoxDecoration(
+                color: i % 2 == 0 ? Colors.grey[50] : Colors.white,
+              ),
+              children: [
+                Center(
+                  child: Text(
+                    days[i],
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ...List.generate(
+                  8,
+                  (j) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: table[i][j]
+                          .map(
+                            (name) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text(
+                                name,
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('منشئ الجدول'),
+        elevation: 0,
+        backgroundColor: Colors.teal,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'حقول المواد',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal),
+            ),
+            const SizedBox(height: 10),
+            ...List.generate(courses.length, (index) => buildCourseField(index)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: addCourseField,
+                  child: const Text('إضافة مادة'),
+                ),
+                ElevatedButton(
+                  onPressed: toggleRamadanTiming,
+                  child: const Text('توقيتات رمضان'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'الجدول الزمني',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal),
+                ),
+                Text(
+                  'عدد الساعات: ${getTotalUnits()}',
+                  style: const TextStyle(fontSize: 18, color: Colors.black87),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            buildTable(),
+          ],
+        ),
+      ),
+    );
+  }
+}

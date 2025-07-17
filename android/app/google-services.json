@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "849953701299",
+    "project_id": "hti-databaseapp",
+    "storage_bucket": "hti-databaseapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:849953701299:android:2d55cf6d82adc2064d9fc6",
+        "android_client_info": {
+          "package_name": "com.exe.apps.hti_tables.tables"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBswr5jyHsZonZN_yzqI2c2d6AiHynkP6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

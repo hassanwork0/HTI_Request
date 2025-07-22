@@ -117,6 +117,7 @@ class _CourseRegistrationContentState
                   onPressed: _refreshRequests,
                 ),
               ),
+              if(!_hasSentRequests)
               Align(
                   alignment: Alignment.topRight,
                   child: Text(

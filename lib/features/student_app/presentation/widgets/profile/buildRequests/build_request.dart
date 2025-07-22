@@ -241,7 +241,7 @@ class _CourseRegistrationContentState
               ],
               if (_studentRegisteredCourseIds.isNotEmpty) ...[
                 const Text(
-                  'Your accepted Courses',
+                  'Your Requested Courses',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

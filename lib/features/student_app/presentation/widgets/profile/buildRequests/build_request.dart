@@ -240,7 +240,6 @@ class _CourseRegistrationContentState
                 const Divider(),
               ],
               if (_studentRegisteredCourseIds.isNotEmpty) ...[
-                //This Almost got me a heart attack
                 const Text(
                   'Your Requested Courses',
                   style: TextStyle(

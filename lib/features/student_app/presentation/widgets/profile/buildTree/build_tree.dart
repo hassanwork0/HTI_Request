@@ -101,7 +101,7 @@ Widget _buildCourseTile(CourseModel course, List<String?> finishedCourseIds, Lis
     margin: const EdgeInsets.only(bottom: 4),
     decoration: BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(32),
       border: Border.all(
         color: borderColor,
         width: 1,
@@ -289,7 +289,7 @@ Widget _buildElectiveTile(CourseModel placeholder, List<String?> finishedCourseI
   );
 }
 
-// Update the _buildYearColumn to pass the student parameter
+//! Update the _buildYearColumn to pass the student parameter
 Widget _buildYearColumn(String title, List<CourseModel> courses, List<String?> finishedCourseIds, Department department,
 List<RequestModel> requests, StudentModel student) {
   return SizedBox(

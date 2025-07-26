@@ -183,7 +183,7 @@ static final List<CourseModel> departmentOptCourses = [
   @override
   // TODO: implement allCourses
   Map<Map<String, int>, List<CourseModel>> get allCoursesMap => {
-        {"Lista A":-1}:generalCoursesList,
+        {"List A":-1}:generalCoursesList,
         {"List B":-1}:requirementCoursesList,
         {"List C":-1}:majorRequirementCoursesList,
         {"List D":1}:economicOptCourses,

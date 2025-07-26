@@ -47,6 +47,13 @@ class StudentModel extends Student {
           ? List<CourseModel>.from(
               json['faildCourses'].map((x) => CourseModel.fromJson(x)))
           : <CourseModel>[],
+
+          
+        //! The Dart need this for storing a local and cloud current List
+                currentCourses: json['currentCourses'] != null
+          ? List<CourseModel>.from(
+              json['currentCourses'].map((x) => CourseModel.fromJson(x)))
+          : <CourseModel>[],
     );
   }
 
@@ -74,6 +81,10 @@ class StudentModel extends Student {
       },
       'coursesFinished': coursesFinished.map((c) => c.toJson()).toList(),
       'faildCourses': faildCourses.map((c) => c.toJson()).toList(),
+
+      //! Needed in the future
+      'currentCourses': currentCourses.map((c) => c.toJson()).toList(),
+
     };
   }
 }

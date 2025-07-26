@@ -14,6 +14,7 @@ class RootApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //The Launcher for the App
     return launcher();
   }
 
